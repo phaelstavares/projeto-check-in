@@ -1,6 +1,6 @@
 import { Search, MoreHorizontal, ChevronsRight, ChevronsLeft, ChevronRight, ChevronLeft } from "lucide-react"
 
-export function Participante() {
+export function Participantes() {
     return (
         <div className="flex flex-col gap-4">
             <div className="flex gap-3 items-center">
