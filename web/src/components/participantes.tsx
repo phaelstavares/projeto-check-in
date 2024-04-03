@@ -7,20 +7,50 @@ import { Table } from "./table/table"
 import { TableHeader } from "./table/table-header"
 import { TableCell } from "./table/table-cell"
 import { TableRow } from "./table/table-row"
-import { ChangeEvent, useState } from "react"
-import { attendees } from "../data/attendess"
+import { ChangeEvent, useEffect, useState } from "react"
 
 dayjs.extend(relativeTime)
 dayjs.locale("pt-br")
 
+interface Attendee {
+    id: string
+    name: string
+    email: string
+    createdAt: string
+    checkedInAt: string | null
+}
+
 export function Participantes() {
-    const [valorDoInput, alteraOValorDoInput] = useState('')
+
+    const [search, setSearch] = useState('')
     const [page, setPage] = useState(1)
 
-    const totalPages = Math.ceil(attendees.length / 10)
+    const [total, setTotal] = useState(0)
+    const [attendees, setAttendees] = useState<Attendee[]>([])
+
+    const totalPages = Math.ceil(total / 10)
+
+    useEffect(() => {
+        const url = new URL("http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees")
+
+        url.searchParams.set("pageIndex", String(page - 1))
+
+        if (search.length > 0) {
+            url.searchParams.set("query", search)
+        }
+
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            setAttendees(data.attendees)
+            setTotal(data.total)
+        })
+    }, [page, search])
 
     function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
-        alteraOValorDoInput(event.target.value)
+        setSearch(event.target.value)
+        setPage(1)
     }
 
     function goToFirstPage() {
@@ -46,10 +76,11 @@ export function Participantes() {
 
                 <div className="flex px-3 w-72 py-1.5 border border-white/10 rounded-lg items-center gap-3">
                     <Search className="size-4 text-emerald-300" />
-                    <input onChange={onSearchInputChanged} className="bg-transparent flex-1 outline-none border-0 p-0 text-sm" placeholder="Buscar participante..." />
+                    <input 
+                        onChange={onSearchInputChanged} 
+                        className="bg-transparent flex-1 outline-none border-0 p-0 text-sm focus:ring-0"
+                        placeholder="Buscar participante..." />
                 </div>
-
-                {valorDoInput}
             </div>
 
                 <Table>
@@ -67,7 +98,7 @@ export function Participantes() {
                     </thead>
 
                     <tbody>
-                        {attendees.slice((page - 1) * 10, page * 10).map((attendee) => {
+                        {attendees.map((attendee) => {
                             return (
                                 <TableRow key={attendee.id}>
                                     <TableCell>
@@ -81,7 +112,9 @@ export function Participantes() {
                                         </div>
                                     </TableCell>
                                     <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
-                                    <TableCell>{dayjs().to(attendee.checkedInAt)}</TableCell>
+                                    <TableCell>
+                                        {attendee.checkedInAt === null ? <span className="text-zinc-400">Não fez check-in</span> : dayjs().to(attendee.checkedInAt)}
+                                    </TableCell>
                                     <TableCell></TableCell>
                                     <td>
                                         <IconButton transparent={true}>
@@ -96,7 +129,7 @@ export function Participantes() {
                     <tfoot>
                         <tr>
                             <TableCell colSpan={3}>
-                                Mostrando 10 de {attendees.length} itens
+                                Mostrando {attendees.length} de {total} itens
                             </TableCell>
                             <TableCell className="text-right py-3 px-4" colSpan={4}>
                                 <div className="inline-flex itens-center gap-8">
