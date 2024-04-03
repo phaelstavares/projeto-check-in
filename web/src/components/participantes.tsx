@@ -1,4 +1,7 @@
 import { Search, MoreHorizontal, ChevronsRight, ChevronsLeft, ChevronRight, ChevronLeft } from "lucide-react"
+import dayjs from "dayjs"
+import "dayjs/locale/pt-br"
+import relativeTime from "dayjs/plugin/relativeTime"
 import { IconButton } from "./icon-button"
 import { Table } from "./table/table"
 import { TableHeader } from "./table/table-header"
@@ -7,11 +10,33 @@ import { TableRow } from "./table/table-row"
 import { ChangeEvent, useState } from "react"
 import { attendees } from "../data/attendess"
 
+dayjs.extend(relativeTime)
+dayjs.locale("pt-br")
+
 export function Participantes() {
     const [valorDoInput, alteraOValorDoInput] = useState('')
+    const [page, setPage] = useState(1)
+
+    const totalPages = Math.ceil(attendees.length / 10)
 
     function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
         alteraOValorDoInput(event.target.value)
+    }
+
+    function goToFirstPage() {
+        setPage(1)
+    }
+
+    function goToPreviousPage() {
+        setPage(page - 1)
+    }
+
+    function goToNextPage() {
+        setPage(page + 1)
+    }
+
+    function goToLastPage() {
+        setPage(totalPages)
     }
     
     return (
@@ -42,7 +67,7 @@ export function Participantes() {
                     </thead>
 
                     <tbody>
-                        {attendees.map((attendee) => {
+                        {attendees.slice((page - 1) * 10, page * 10).map((attendee) => {
                             return (
                                 <TableRow key={attendee.id}>
                                     <TableCell>
@@ -55,8 +80,8 @@ export function Participantes() {
                                             <span>{attendee.email}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{attendee.createdAt.toISOString()}</TableCell>
-                                    <TableCell>{attendee.checkedInAt.toISOString()}</TableCell>
+                                    <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
+                                    <TableCell>{dayjs().to(attendee.checkedInAt)}</TableCell>
                                     <TableCell></TableCell>
                                     <td>
                                         <IconButton transparent={true}>
@@ -71,30 +96,30 @@ export function Participantes() {
                     <tfoot>
                         <tr>
                             <TableCell colSpan={3}>
-                                Mostrando 10 de 228 itens
+                                Mostrando 10 de {attendees.length} itens
                             </TableCell>
                             <TableCell className="text-right py-3 px-4" colSpan={4}>
                                 <div className="inline-flex itens-center gap-8">
-                                    <span>Página 1 de 23</span>
+                                    <span>Página {page} de {totalPages}</span>
                                     
                                     <div className="flex gap-1.5">
                                         <td>
-                                            <IconButton>
+                                            <IconButton onClick={goToFirstPage} disabled={page === 1}>
                                                 <ChevronsLeft className="size-4" />
                                             </IconButton>
                                         </td>
                                         <td>
-                                            <IconButton>
+                                            <IconButton onClick={goToPreviousPage} disabled={page === 1}>
                                                 <ChevronLeft className="size-4" />
                                             </IconButton>
                                         </td>
                                         <td>
-                                            <IconButton>
+                                            <IconButton onClick={goToNextPage} disabled={page === totalPages}>
                                                 <ChevronRight className="size-4" />
                                             </IconButton>
                                         </td>
                                         <td>
-                                            <IconButton>
+                                            <IconButton onClick={goToLastPage} disabled={page === totalPages}>
                                                 <ChevronsRight className="size-4" />
                                             </IconButton>
                                         </td>
